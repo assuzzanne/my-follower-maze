@@ -2,7 +2,7 @@
   "name": "js",
   "version": "0.0.1",
   "description": "follower maze refactoring challenge in javascript",
-  "main": "server.js",
+  "main": "index.js",
   "author": "SoundCloud",
   "devDependencies": {
     "prettier": "1.18.2",
