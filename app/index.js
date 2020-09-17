@@ -1,6 +1,9 @@
+//const dotenv = require('dotenv');
 const net = require("net");
 const readline = require("readline");
 
+// dotenv.config()
+// optimise 
 const EVENT_PORT = 9090;
 const CLIENT_PORT = 9099;
 
@@ -47,6 +50,7 @@ net
         const kind = nextMessage[1];
         // "S"
 
+        
         switch (kind) {
           case "F":
             // an user starts to follow another user
@@ -71,7 +75,7 @@ net
               // The user clients connect on port 9099 and identify themselves with their user ID
               // if followed user connected
               // the sever/socket sends to the user client the event (payload): "3325|F|8|14
-              // like a notification
+              //  notification
               if (socket) {
                 socket.write(nextPayload + "\n");
               }
@@ -124,8 +128,8 @@ net
             break;
 
           case "S":
-          // Status Update
-          // 634|S|32 
+            // Status Update
+            // 634|S|32
             {
               const fromUserId = parseInt(nextMessage[2]);
               // 32
@@ -159,19 +163,19 @@ net
     const readInterface = readline.createInterface({ input: clientSocket });
     readInterface.on("line", (userIdString) => {
       if (userIdString != null) {
-        // The user clients connect on port 9099 and identify themselves with their user ID. 
+        // The user clients connect on port 9099 and identify themselves with their user ID.
         // For example, once connected a user client may send down 2932\r\n, indicating that it is representing user 2932.
         clientPool[parseInt(userIdString)] = clientSocket;
         console.log(
           `User connected: ${userIdString} (${clientPool.length} total)`
-          );
-        }
-        // if null? 
-      });
-    })
-    .listen(CLIENT_PORT, "127.0.0.1", (err) => {
-      if (err) {
-        throw err;
+        );
       }
-      console.log(`Listening for client requests on ${CLIENT_PORT}`);
+      // if null?
+    });
+  })
+  .listen(CLIENT_PORT, "127.0.0.1", (err) => {
+    if (err) {
+      throw err;
+    }
+    console.log(`Listening for client requests on ${CLIENT_PORT}`);
   });
