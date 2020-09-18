@@ -5,27 +5,42 @@ const CLIENT_PORT = 9099;
 
 const clientPool = {};
 const clientPoolInstance = {
-    add: (userId, clientSocket) => clientPool[parseInt(userId)] = clientSocket,
-    getOne: (userId) => clientPool[parseInt(userId)], 
-    getAll: () => clientPool,
-    count: () => Object.keys(clientPool).length,
-}
+  add: (userIdString, clientSocket) => {
+    const userId = parseInt(userIdString,  10);
+    if (clientPool[userId]) {
+      return;
+    }
+    clientPool[userId] = clientSocket;
+  },
+  getOne: (userIdString) => clientPool[parseInt(userIdString, 10)],
+  get: () => clientPool,
+  count: () => Object.keys(clientPool).length,
+};
 Object.freeze(clientPoolInstance);
+
+function writeToClient(userId, event) {
+  const socket = clientPoolInstance.getOne(userId);
+
+  if (socket) {
+    socket.write(event + "\n");
+  }
+}
 
 // clientListener
 function clientListener() {
   net
     .createServer((clientSocket) => {
       const readInterface = readline.createInterface({ input: clientSocket });
-      readInterface.on("line", (userId) => {
+      readInterface.on("line", (userIdString) => {
 
-        if (userId === null) {
+        if (!userIdString) {
           console.error("No user id provided!");
         }
 
-        clientPoolInstance.add(userId, clientSocket);
-
-        console.log(`User connected: ${userId} (${clientPoolInstance.count()} total)`);
+        clientPoolInstance.add(userIdString, clientSocket);
+        console.log(
+          `User connected: ${userIdString} (${clientPoolInstance.count()} total)`
+        );
       });
     })
     .listen(CLIENT_PORT, "127.0.0.1", (err) => {
@@ -39,3 +54,4 @@ function clientListener() {
 
 exports.clientPoolInstance = clientPoolInstance;
 exports.clientListener = clientListener;
+exports.writeToClient = writeToClient;
