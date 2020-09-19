@@ -1,14 +1,9 @@
-/* const followRegistryInstance = require('../eventDispatcher');
+const { followRegistryInstance } = require("../eventDispatcher");
+const { writeToClient } = require("../client");
 
-module.exports = function process(event) {
-        // const followers = followRegistry[toUserId] || new Set([]);
-        const 
-        // followers.add(fromUserId);
-        // followRegistry[toUserId] = followers;
+function process(toUserId, fromUserId, event) {
+  followRegistryInstance.addFollowerToList(toUserId, fromUserId);
+  writeToClient(toUserId, event.join("|"));
+};
 
-        // const socket = clientPool[toUserId];
-        // if (socket) {
-        //   socket.write(event + "\n");
-        // }  
-}
- */
+exports.process = process;

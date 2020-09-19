@@ -1,91 +1,85 @@
 const { clientPoolInstance, writeToClient } = require("./client");
 
-// const followEventHandler = require("./handlers/followEventHandler");
+const followEventHandler = require("./handlers/followEventHandler");
 // const unfollowEventHandler = require("./handlers/unfollowEventHandler");
 // const privateMessageEventHandler = require("./handlers/privateMessageEventHandler");
 // const broadcastEventHandler = require("./handlers/broadcastEventHandler");
 // const statusUpdateEventHandler = require("./handlers/statusUpdateEventHandler");
 
-const followRegistry = new Map();
+const followRegistry = {};
 const followRegistryInstance = {
   addFollowerToList: (toUserId, fromUserId) => {
-    if (followRegistry.has(toUserId)) {
-      const followersList = followRegistry.get(toUserId);
-      followersList.add(fromUserId);
+    const followers = followRegistry[toUserId];
+    if (followers) {
+      followers.add(fromUserId);
     } else {
-      const followersList = new Set([]);
-      followRegistry.set(toUserId, followersList.add(fromUserId));
+      const followers = new Set([]);
+      followers.add(fromUserId);
     }
   },
   removeFollowerFromList: (toUserId, fromUserId) => {
-    if (followRegistry.has(toUserId)) {
-      const followersList = followRegistry.get(toUserId);
-      followersList.delete(fromUserId);
+    const followers = followRegistry[toUserId];
+    if (followers) {
+      followers.delete(fromUserId);
+    } else {
+      followRegistry[toUserId] = new Set([]);
     }
   },
   getUserFollowersList: (fromUserId) => {
-    followRegistry.get(fromUserId);
+    const followers = followRegistry[fromUserId];
+    if (!followers) {
+      return (followRegistry[fromUserId] = new Set([]));
+    }
+    return followers;
   },
 };
 Object.freeze(followRegistryInstance);
 
 function processEvent(event) {
-  const eventData = event.split("|");
-  const eventType = eventData[1];
+  const eventType = event[1];
 
-  const fromUserId = parseInt(eventData[2]);
-  const toUserId = parseInt(eventData[3]);
+  const fromUserId = parseInt(event[2], 10);
+  const toUserId = parseInt(event[3], 10);
 
   switch (eventType) {
     case "F":
-      // Follow
       {
         followRegistryInstance.addFollowerToList(toUserId, fromUserId);
-        writeToClient(toUserId, event);
+        writeToClient(toUserId, event.join("|"));
+        // followEventHandler.process(toUserId, fromUserId, event);
+
       }
       break;
 
     case "U":
-      // Unfollow
       {
         followRegistryInstance.removeFollowerFromList(toUserId, fromUserId);
       }
       break;
 
     case "P":
-      // Private Msg
       {
-        writeToClient(toUserId, event);
+        writeToClient(toUserId, event.join("|"));
       }
       break;
 
     case "B":
-      // Brodcast
       {
         const clientPool = clientPoolInstance.get();
-
-        for (let userId in clientPool) {
-          writeToClient(userId, event);
+        for (let toUserId in clientPool) {
+          writeToClient(toUserId, event.join("|"));
         }
       }
       break;
 
     case "S":
-      // Status Update
       {
         const followers = followRegistryInstance.getUserFollowersList(
           fromUserId
         );
-        if (!followers) return;
-          followers.forEach((follower) => {
-            writeToClient(follower, event);
-          });
-      }
-      break;
-
-    default:
-      {
-        console.error(`Failed to process event ${event}!`);
+        followers.forEach((follower) => {
+          writeToClient(follower, event.join("|"));
+        });
       }
       break;
   }
@@ -93,4 +87,3 @@ function processEvent(event) {
 
 exports.followRegistryInstance = followRegistryInstance;
 exports.processEvent = processEvent;
-exports.writeToClient = writeToClient;
