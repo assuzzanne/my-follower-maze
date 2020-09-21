@@ -1,13 +1,12 @@
 const net = require("net");
 const readline = require("readline");
 
-const { processEvent } = require("./eventDispatcher");
+const EVENT_PORT = process.env.EVENT_PORT || 9090;
 
-const EVENT_PORT = 9090;
+const { processEvent } = require("./eventDispatcher");
 
 let lastSequenceNumber = 0;
 
-// eventListener
 function eventListener() {
   net
     .createServer((eventSocket) => {

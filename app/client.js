@@ -1,9 +1,9 @@
 const net = require("net");
 const readline = require("readline");
 
-const { clientPoolInstance } = require("./singletons/clientPoolInstance");
+const CLIENT_PORT = process.env.CLIENT_PORT || 9099;
 
-const CLIENT_PORT = 9099;
+const { clientPoolInstance } = require("./singletons/clientPoolInstance");
 
 function writeToClient(userId, event) {
   const socket = clientPoolInstance.getOne(userId);
@@ -14,7 +14,6 @@ function writeToClient(userId, event) {
   socket.write(event + "\n");
 }
 
-// clientListener
 function clientListener() {
   net
     .createServer((clientSocket) => {
