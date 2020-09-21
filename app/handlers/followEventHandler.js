@@ -1,9 +1,7 @@
-const { followRegistryInstance } = require("../eventDispatcher");
 const { writeToClient } = require("../client");
+const { followRegistryInstance } = require("../singletons/followRegistryInstance");
 
-function process(toUserId, fromUserId, event) {
+module.exports = function process(toUserId, fromUserId, event) {
   followRegistryInstance.addFollowerToList(toUserId, fromUserId);
   writeToClient(toUserId, event.join("|"));
-};
-
-exports.process = process;
+}

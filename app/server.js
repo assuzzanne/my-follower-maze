@@ -1,5 +1,6 @@
 const net = require("net");
 const readline = require("readline");
+
 const { processEvent } = require("./eventDispatcher");
 
 const EVENT_PORT = 9090;

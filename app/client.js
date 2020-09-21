@@ -1,22 +1,9 @@
 const net = require("net");
 const readline = require("readline");
 
-const CLIENT_PORT = 9099;
+const { clientPoolInstance } = require("./singletons/clientPoolInstance");
 
-const clientPool = {};
-const clientPoolInstance = {
-  add: (userIdString, clientSocket) => {
-    const userId = parseInt(userIdString, 10);
-    if (clientPool[userId]) {
-      return;
-    }
-    clientPool[userId] = clientSocket;
-  },
-  getOne: (userIdString) => clientPool[parseInt(userIdString, 10)],
-  get: () => clientPool,
-  count: () => Object.keys(clientPool).length,
-};
-Object.freeze(clientPoolInstance);
+const CLIENT_PORT = 9099;
 
 function writeToClient(userId, event) {
   const socket = clientPoolInstance.getOne(userId);
@@ -37,7 +24,6 @@ function clientListener() {
           console.error("No userId provided!");
         }
 
-        // clientPool[parseInt(userIdString)] = clientSocket;
         clientPoolInstance.add(userIdString, clientSocket);
         console.log(
           `User connected: ${userIdString} (${clientPoolInstance.count()} total)`
@@ -52,6 +38,5 @@ function clientListener() {
     });
 }
 
-exports.clientPoolInstance = clientPoolInstance;
 exports.clientListener = clientListener;
 exports.writeToClient = writeToClient;
