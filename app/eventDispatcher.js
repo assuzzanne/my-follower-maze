@@ -40,6 +40,9 @@ function processEvent(event) {
         statusUpdateEventHandler(fromUserId, event);
       }
       break;
+
+    default:
+      console.error("Failed to dispatch the message!");
   }
 }
 
