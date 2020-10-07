@@ -5,7 +5,7 @@ const deadLetterQueueInstance = {
   peek: () =>
     !deadLetterQueue.isEmpty() ? deadLetterQueue[0] : undefined,
   isEmpty: () => deadLetterQueue.length == 0,
-  size: () => deadLetterQueue.length,
+  count: () => deadLetterQueue.length,
 };
 Object.freeze(deadLetterQueueInstance);
 
