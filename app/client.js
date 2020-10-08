@@ -4,17 +4,12 @@ const readline = require("readline");
 const CLIENT_PORT = process.env.CLIENT_PORT || 9099;
 
 const { clientPoolInstance } = require("./singletons/clientPoolInstance");
-const { deadLetterQueueInstance } = require("./singletons/deadLetterQueue");
+const { addToDeadLetterQueue } = require("./singletons/deadLetterQueue");
 
 function writeToClient(userId, event) {
   const socket = clientPoolInstance.getOne(userId);
   if (!socket) {
-    deadLetterQueueInstance.enqueue(event);
-    console.info(
-      "Message added to the dead letter queue successfully!",
-      event,
-      deadLetterQueueInstance.count()
-    );
+    addToDeadLetterQueue(event);
     return;
   }
 
