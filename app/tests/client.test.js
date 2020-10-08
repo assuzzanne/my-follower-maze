@@ -11,7 +11,8 @@ describe("Client", () => {
   
     describe("#writeToClient", () => {
       describe("#isEventValid", () => {
-        it("should add event to dead letter queue if no socket is provided", () => {
+        it("should add event to dead letter queue if no client is connected", () => {
+          // it works because my clientPool is empty during the execution of this test
             const event = "98238|F|19|15";
             const userId = "15";
             writeToClient(userId, event);
