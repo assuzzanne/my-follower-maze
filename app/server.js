@@ -4,7 +4,7 @@ const readline = require("readline");
 const EVENT_PORT = process.env.EVENT_PORT || 9090;
 
 const { eventBus } = require("./singletons/eventBus");
-const { deadLetterQueueInstance } = require("./singletons/deadLetterQueue");
+const { addToDeadLetterQueue } = require("./singletons/deadLetterQueue");
 
 const followEventHandler = require("./handlers/followEventHandler");
 const unfollowEventHandler = require("./handlers/unfollowEventHandler");
@@ -33,24 +33,18 @@ function initSubscriptions() {
 function isEventValid(event) {
   // here we check if the event is a string and if it matchs the different structures of the string: 99995|U|11|15 or 99999|S|25 or 60619|B
   const regexp = /(([a-z0-9]{1,6})\|){1,}([a-z0-9]{1,3})/gi;
-  if (event && typeof event === "string" && regexp.test(event)) return true;
+   return (event && typeof event === "string" && regexp.test(event)) ?  true : false;
 }
 
 function isEventTypeValid(eventType) {
   const regexp = /[A-Z]{1}/;
-  if (eventType && typeof eventType === "string" && regexp.test(eventType))
-    return true;
+  return (eventType && typeof eventType === "string" && regexp.test(eventType)) ? true : false;
 }
 
 function processEvent(event) {
   const eventType = event[1];
   if (!isEventTypeValid(eventType)) {
-    deadLetterQueueInstance.enqueue(event);
-    console.info(
-      "Message added to the dead letter queue successfully!",
-      event,
-      deadLetterQueueInstance.count()
-    );
+    addToDeadLetterQueue(event);
     return;
   }
 
@@ -65,20 +59,13 @@ function eventListener() {
     .createServer((eventSocket) => {
       const sequenceNumberToMessage = {};
       const readInterface = readline.createInterface({ input: eventSocket });
-
-      // subscriptions
       initSubscriptions();
 
       readInterface.on("line", (event) => {
         console.log(`Message received: ${event}`);
 
         if (!isEventValid(event)) {
-          deadLetterQueueInstance.enqueue(event);
-          console.info(
-            "Message added to the dead letter queue successfully!",
-            event,
-            deadLetterQueueInstance.count()
-          );
+          addToDeadLetterQueue(event);
           return;
         }
 
@@ -105,3 +92,6 @@ function eventListener() {
 
 exports.eventListener = eventListener;
 exports.processEvent = processEvent;
+exports.isEventTypeValid = isEventTypeValid;
+exports.isEventValid = isEventValid;
+exports.addToDeadLetterQueue = addToDeadLetterQueue;
