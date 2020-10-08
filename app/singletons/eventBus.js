@@ -31,7 +31,6 @@ const eventBus = {
   publish: (eventType, args) => {
     if (!eventBusSubscriptions[eventType]) return;
 
-    console.log(eventBusSubscriptions)
     Object.keys(eventBusSubscriptions[eventType]).forEach((key) => {
       eventBusSubscriptions[eventType][key](args);
     });
