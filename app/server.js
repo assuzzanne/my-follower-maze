@@ -14,13 +14,44 @@ const statusUpdateEventHandler = require("./handlers/statusUpdateEventHandler");
 
 let lastSequenceNumber = 0;
 
+function initSubscriptions() {
+  eventBus.subscribe("F", (args) =>
+    followEventHandler(args.toUserId, args.fromUserId, args.event)
+  );
+  eventBus.subscribe("U", (args) => {
+    unfollowEventHandler(args.toUserId, args.fromUserId);
+  });
+  eventBus.subscribe("P", (args) =>
+    privateMessageEventHandler(args.toUserId, args.event)
+  );
+  eventBus.subscribe("B", (args) => broadcastEventHandler(args.event));
+  eventBus.subscribe("S", (args) =>
+    statusUpdateEventHandler(args.fromUserId, args.event)
+  );
+}
+
+function isEventValid(event) {
+  // here we check if the event is a string and if it matchs the different structures of the string: 99995|U|11|15 or 99999|S|25 or 60619|B
+  const regexp = /(([a-z0-9]{1,6})\|){1,}([a-z0-9]{1,3})/gi;
+  if (event && typeof event === "string" && regexp.test(event)) return true;
+}
+
+function isEventTypeValid(eventType) {
+  const regexp = /[A-Z]{1}/;
+  if (eventType && typeof eventType === "string" && regexp.test(eventType))
+    return true;
+}
+
 function processEvent(event) {
   const eventType = event[1];
-  if (!eventType) {
+  if (!isEventTypeValid(eventType)) {
     deadLetterQueueInstance.enqueue(event);
-    console.log(
-      "Message added to the dead letter queue successfully!", deadLetterQueueInstance.count()
+    console.info(
+      "Message added to the dead letter queue successfully!",
+      event,
+      deadLetterQueueInstance.count()
     );
+    return;
   }
 
   const fromUserId = parseInt(event[2], 10);
@@ -36,22 +67,20 @@ function eventListener() {
       const readInterface = readline.createInterface({ input: eventSocket });
 
       // subscriptions
-      eventBus.subscribe("F", (args) =>
-        followEventHandler(args.toUserId, args.fromUserId, args.event)
-      );
-      eventBus.subscribe("U", (args) => {
-        unfollowEventHandler(args.toUserId, args.fromUserId);
-      });
-      eventBus.subscribe("P", (args) =>
-        privateMessageEventHandler(args.toUserId, args.event)
-      );
-      eventBus.subscribe("B", (args) => broadcastEventHandler(args.event));
-      eventBus.subscribe("S", (args) =>
-        statusUpdateEventHandler(args.fromUserId, args.event)
-      );
+      initSubscriptions();
 
       readInterface.on("line", (event) => {
         console.log(`Message received: ${event}`);
+
+        if (!isEventValid(event)) {
+          deadLetterQueueInstance.enqueue(event);
+          console.info(
+            "Message added to the dead letter queue successfully!",
+            event,
+            deadLetterQueueInstance.count()
+          );
+          return;
+        }
 
         const eventParts = event.split("|");
         sequenceNumberToMessage[parseInt(eventParts[0])] = eventParts;
@@ -75,3 +104,4 @@ function eventListener() {
 }
 
 exports.eventListener = eventListener;
+exports.processEvent = processEvent;
