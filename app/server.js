@@ -44,7 +44,7 @@ function isEventTypeValid(eventType) {
 function processEvent(event) {
   const eventType = event[1];
   if (!isEventTypeValid(eventType)) {
-    addToDeadLetterQueue(event);
+    addToDeadLetterQueue(event.join("|"));
     return;
   }
 
@@ -59,6 +59,7 @@ function eventListener() {
     .createServer((eventSocket) => {
       const sequenceNumberToMessage = {};
       const readInterface = readline.createInterface({ input: eventSocket });
+      
       initSubscriptions();
 
       readInterface.on("line", (event) => {

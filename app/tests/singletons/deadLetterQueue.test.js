@@ -11,7 +11,7 @@ describe("Dead Letter Queue", () => {
   });
   describe("addToDeadLetterQueue", () => {
     it("should add event to dead letter queue", () => {
-      const event = [99797, "MALFORMED", 14];
+      const event = "99797|MALFORMED|14";
       addToDeadLetterQueue(event);
 
       chai.expect(deadLetterQueueInstance.count()).to.equal(1);
